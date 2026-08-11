@@ -8,6 +8,7 @@ const { saveQuote, listQuotes } = require('./storage');
 const { buildShareLink, buildPdfPayload } = require('./export');
 const { upsertUser } = require('./database');
 const { initPostgres, saveQuotePostgres, listQuotesPostgres } = require('./postgresAdapter');
+const { verifyGoogleCredential } = require('./googleAuth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -33,22 +34,17 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'cotbav-backend' });
 });
 
-app.post('/api/auth/google', (req, res) => {
+app.post('/api/auth/google', async (req, res) => {
   const { credential } = req.body;
 
-  if (!credential) {
-    return res.status(400).json({ error: 'Credential is required' });
+  try {
+    const user = await verifyGoogleCredential(credential);
+    upsertUser(user);
+    const token = createSessionToken(user);
+    res.json({ token, user });
+  } catch (error) {
+    res.status(401).json({ error: error.message || 'Invalid Google credential' });
   }
-
-  const user = {
-    id: `user-${Date.now()}`,
-    email: 'usuario@cotbav.example',
-    name: 'Usuario CotBAV'
-  };
-
-  upsertUser(user);
-  const token = createSessionToken(user);
-  res.json({ token, user });
 });
 
 app.post('/api/quote/estimate', (req, res) => {

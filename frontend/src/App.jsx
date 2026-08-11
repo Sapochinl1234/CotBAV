@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || '';
+const api = axios.create({ baseURL: apiBaseUrl });
+
 const serviceOptions = [
   { value: 'web', label: 'Desarrollo web' },
   { value: 'mobile', label: 'Desarrollo móvil' },
@@ -32,7 +35,7 @@ function App() {
     const requestQuote = async () => {
       setLoading(true);
       try {
-        const response = await axios.post('/api/quote/estimate', form);
+        const response = await api.post('/api/quote/estimate', form);
         if (!ignore) {
           setQuote(response.data);
         }
@@ -57,9 +60,9 @@ function App() {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const response = await axios.post('/api/auth/google', { credential: credentialResponse.credential });
+      const response = await api.post('/api/auth/google', { credential: credentialResponse.credential });
       setUser(response.data.user);
-      const historyResponse = await axios.get(`/api/quotes/${response.data.user.id}`);
+      const historyResponse = await api.get(`/api/quotes/${response.data.user.id}`);
       setHistory(historyResponse.data);
     } catch (error) {
       console.error('Google auth failed', error);
@@ -78,7 +81,7 @@ function App() {
     };
 
     try {
-      const response = await axios.post('/api/quotes', payload);
+      const response = await api.post('/api/quotes', payload);
       setHistory((prev) => [response.data, ...prev]);
     } catch (error) {
       console.error('Could not save quote', error);
@@ -87,7 +90,7 @@ function App() {
 
   const exportCurrentQuote = async () => {
     try {
-      const response = await axios.post('/api/quotes/export', {
+      const response = await api.post('/api/quotes/export', {
         quoteId: 'demo-quote',
         baseUrl: window.location.origin,
         quote: { ...form, result: quote }
