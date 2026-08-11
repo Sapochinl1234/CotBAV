@@ -1,0 +1,39 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; }
+
+#root { min-height: 100vh; }
+
+.app-shell { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.hero { padding: 24px 0 16px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; }
+.theme-dark { color: #e5f6ff; background: linear-gradient(135deg, #071b2e, #12344f); }
+.theme-light { color: #072235; background: linear-gradient(135deg, #eaf7ff, #cfe8f8); }
+.auth-card { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 14px; display: flex; flex-direction: column; gap: 8px; }
+.theme-toggle { border: none; border-radius: 999px; padding: 8px 12px; background: #61dafb; color: #04283d; font-weight: 700; cursor: pointer; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.24em; color: #61dafb; font-size: 0.8rem; }
+.hero h1 { font-size: clamp(1.8rem, 3.2vw, 2.8rem); margin: 8px 0; }
+.hero p { color: inherit; }
+.cookie-banner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.12); margin-bottom: 20px; }
+.cookie-banner button { border: none; border-radius: 999px; background: #61dafb; color: #04283d; font-weight: 700; padding: 8px 14px; cursor: pointer; }
+.content-grid { display: grid; gap: 20px; }
+.card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); }
+label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-weight: 600; }
+input, select { padding: 12px; border-radius: 10px; border: 1px solid #3d709b; background: #0f2133; color: #fff; }
+.theme-light input, .theme-light select { background: #f3fbff; color: #072235; }
+.quote-box { margin-top: 16px; padding: 16px; border-radius: 16px; background: rgba(97,218,251,0.16); }
+.actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.save-button, .secondary-button { padding: 10px 14px; border: none; border-radius: 999px; font-weight: 700; cursor: pointer; }
+.save-button { background: #61dafb; color: #04283d; }
+.secondary-button { background: #15435f; color: #fff; }
+.history-card ul { padding-left: 18px; }
+.history-card li { margin-bottom: 8px; }
+.footer { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 0.95rem; }
+@media (min-width: 780px) {
+  .content-grid { grid-template-columns: 1.1fr 0.9fr; }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "cotbav-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "frontend": "npm --prefix frontend run dev",
+    "backend": "npm --prefix backend run dev"
+  }
+}

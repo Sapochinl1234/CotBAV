@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+backend/data/
+backend/*.sqlite
+backend/*.sqlite-journal

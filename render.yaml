@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: cotbav-backend
+    env: node
+    plan: free
+    buildCommand: npm --prefix backend install
+    startCommand: npm --prefix backend start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
