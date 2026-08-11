@@ -1,7 +1,13 @@
 const Database = require('better-sqlite3');
+const fs = require('fs');
 const path = require('path');
 
-const db = new Database(path.join(__dirname, '..', 'data', 'cotbav.sqlite'));
+const dbDir = path.join(__dirname, '..', 'data');
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const db = new Database(path.join(dbDir, 'cotbav.sqlite'));
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
