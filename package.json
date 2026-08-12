@@ -2,6 +2,10 @@
   "name": "cotbav-monorepo",
   "private": true,
   "version": "1.0.0",
+  "packageManager": "npm@9.8.1",
+  "engines": {
+    "node": "18.x"
+  },
   "workspaces": ["frontend", "backend"],
   "scripts": {
     "frontend": "npm --prefix frontend run dev",
