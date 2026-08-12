@@ -17,8 +17,21 @@ initPostgres().catch((error) => {
   console.error('Postgres init failed', error);
 });
 
-app.use(helmet());
-app.use(cors({ origin: true, credentials: true }));
+const corsOptions = {
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false
+}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -48,25 +61,30 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 app.post('/api/quote/estimate', (req, res) => {
-  const { service, hours, experience, clientLocation, currency, urgency } = req.body;
+  try {
+    const { service, hours, experience, clientLocation, currency, urgency } = req.body;
 
-  const baseHourly = {
-    web: { junior: 40000, mid: 70000, senior: 110000 },
-    mobile: { junior: 45000, mid: 80000, senior: 120000 },
-    data: { junior: 50000, mid: 90000, senior: 140000 },
-    support: { junior: 30000, mid: 50000, senior: 80000 }
-  };
+    const baseHourly = {
+      web: { junior: 40000, mid: 70000, senior: 110000 },
+      mobile: { junior: 45000, mid: 80000, senior: 120000 },
+      data: { junior: 50000, mid: 90000, senior: 140000 },
+      support: { junior: 30000, mid: 50000, senior: 80000 }
+    };
 
-  const rate = baseHourly[service]?.[experience] || 70000;
-  const complexityFactor = urgency === 'urgent' ? 1.25 : urgency === 'high' ? 1.15 : 1;
-  const locationFactor = clientLocation === 'international' ? 1.18 : 1;
-  const currencyFactor = currency === 'usd' ? 4200 : 1;
-  const gross = rate * hours * complexityFactor * locationFactor;
-  const minimum = Math.round(gross * 0.9 / currencyFactor);
-  const ideal = Math.round(gross / currencyFactor);
-  const premium = Math.round(gross * 1.15 / currencyFactor);
+    const rate = baseHourly[service]?.[experience] || 70000;
+    const complexityFactor = urgency === 'urgent' ? 1.25 : urgency === 'high' ? 1.15 : 1;
+    const locationFactor = clientLocation === 'international' ? 1.18 : 1;
+    const currencyFactor = currency === 'usd' ? 4200 : 1;
+    const gross = rate * hours * complexityFactor * locationFactor;
+    const minimum = Math.round(gross * 0.9 / currencyFactor);
+    const ideal = Math.round(gross / currencyFactor);
+    const premium = Math.round(gross * 1.15 / currencyFactor);
 
-  res.json({ minimum, ideal, premium, currency: currency.toUpperCase() });
+    res.json({ minimum, ideal, premium, currency: currency.toUpperCase() });
+  } catch (error) {
+    console.error('Estimate quote failed:', error);
+    res.status(500).json({ error: 'Could not estimate quote', details: error.message });
+  }
 });
 
 app.post('/api/quotes', async (req, res) => {
@@ -82,7 +100,8 @@ app.post('/api/quotes', async (req, res) => {
       : saveQuote(userId, quote);
     res.status(201).json(saved);
   } catch (error) {
-    res.status(500).json({ error: 'Could not save quote' });
+    console.error('Save quote failed:', error);
+    res.status(500).json({ error: 'Could not save quote', details: error.message });
   }
 });
 
@@ -93,21 +112,27 @@ app.get('/api/quotes/:userId', async (req, res) => {
       : listQuotes(req.params.userId);
     res.json(quotes);
   } catch (error) {
-    res.status(500).json({ error: 'Could not load quotes' });
+    console.error('Load quotes failed:', error);
+    res.status(500).json({ error: 'Could not load quotes', details: error.message });
   }
 });
 
 app.post('/api/quotes/export', (req, res) => {
-  const { quoteId, baseUrl } = req.body;
+  try {
+    const { quoteId, baseUrl } = req.body;
 
-  if (!quoteId) {
-    return res.status(400).json({ error: 'quoteId is required' });
+    if (!quoteId) {
+      return res.status(400).json({ error: 'quoteId is required' });
+    }
+
+    const shareLink = buildShareLink(baseUrl || 'https://cotbav.example', quoteId);
+    const pdfPayload = buildPdfPayload(req.body.quote || {});
+
+    res.json({ shareLink, pdfPayload });
+  } catch (error) {
+    console.error('Export quote failed:', error);
+    res.status(500).json({ error: 'Could not export quote', details: error.message });
   }
-
-  const shareLink = buildShareLink(baseUrl || 'https://cotbav.example', quoteId);
-  const pdfPayload = buildPdfPayload(req.body.quote || {});
-
-  res.json({ shareLink, pdfPayload });
 });
 
 app.listen(PORT, () => {

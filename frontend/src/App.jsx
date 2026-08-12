@@ -1,9 +1,42 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
+import { jsPDF } from 'jspdf';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || '';
+const apiBaseUrl = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3001' : 'https://cotbav-backend.onrender.com');
 const api = axios.create({ baseURL: apiBaseUrl });
+
+const downloadPdf = (payload) => {
+  const title = payload.title || 'Cotizacion';
+  const content = payload.content || '';
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.text(title, 40, 50);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  const lines = doc.splitTextToSize(content, 520);
+  doc.text(lines, 40, 80);
+
+  const filename = `${title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+  doc.save(filename);
+};
+
+const shareExportLink = async (url) => {
+  if (navigator.share) {
+    await navigator.share({
+      title: 'CotBAV - Cotización compartida',
+      text: 'Revisa mi cotización CotBAV',
+      url
+    });
+    return 'Compartido correctamente.';
+  }
+
+  await navigator.clipboard.writeText(url);
+  return 'Enlace copiado al portapapeles.';
+};
 
 const serviceOptions = [
   { value: 'web', label: 'Desarrollo web' },
@@ -88,16 +121,38 @@ function App() {
     }
   };
 
-  const exportCurrentQuote = async () => {
+  const exportQuote = async () => {
+    const response = await api.post('/api/quotes/export', {
+      quoteId: 'demo-quote',
+      baseUrl: window.location.origin,
+      quote: { ...form, result: quote }
+    });
+    return response.data;
+  };
+
+  const downloadCurrentQuote = async () => {
     try {
-      const response = await api.post('/api/quotes/export', {
-        quoteId: 'demo-quote',
-        baseUrl: window.location.origin,
-        quote: { ...form, result: quote }
-      });
-      window.alert(`Enlace compartible: ${response.data.shareLink}`);
+      const { pdfPayload } = await exportQuote();
+      if (!pdfPayload) {
+        throw new Error('El servidor no devolvió datos para el PDF.');
+      }
+
+      downloadPdf(pdfPayload);
+      window.alert('PDF descargado correctamente.');
     } catch (error) {
-      console.error('Could not export quote', error);
+      console.error('Could not download quote', error);
+      window.alert('No se pudo descargar la cotización. Revisa la consola para más detalles.');
+    }
+  };
+
+  const shareCurrentQuote = async () => {
+    try {
+      const { shareLink } = await exportQuote();
+      const shareResult = await shareExportLink(shareLink);
+      window.alert(`${shareResult}\n${shareLink}`);
+    } catch (error) {
+      console.error('Could not share quote', error);
+      window.alert('No se pudo compartir la cotización. Revisa la consola para más detalles.');
     }
   };
 
@@ -203,7 +258,8 @@ function App() {
             {user && (
               <div className="actions-row">
                 <button className="save-button" type="button" onClick={saveCurrentQuote}>Guardar cotización</button>
-                <button className="secondary-button" type="button" onClick={exportCurrentQuote}>Exportar / Compartir</button>
+                <button className="secondary-button" type="button" onClick={downloadCurrentQuote}>Descargar PDF</button>
+                <button className="secondary-button" type="button" onClick={shareCurrentQuote}>Compartir cotización</button>
               </div>
             )}
           </div>
