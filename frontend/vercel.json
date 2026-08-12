@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://cotbav-backend.onrender.com/api/$1"
-    }
-  ]
-}
